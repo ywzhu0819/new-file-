@@ -1,4 +1,4 @@
-FROM cargo.caicloudprivatetest.com/caicloud/centos7jdk1.8
+FROM centos:centos7
 
 ENV JAVA_OPTS="-Djava.awt.headless=true -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=10053 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
 ENV LOG_FOLDER=/data0/logs/
