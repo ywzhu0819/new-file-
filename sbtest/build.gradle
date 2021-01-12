@@ -1,0 +1,83 @@
+buildscript {
+    repositories {
+        maven {
+            url "http://nexus.nxin.com/nexus/content/groups/public/"
+        }
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.9.RELEASE")
+        classpath("gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0")
+    }
+}
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
+apply plugin: 'org.springframework.boot'
+
+jar {
+    baseName = 'gs-spring-boot'
+    version = '0.1.0'
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    // tag::jetty[]
+    compile("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: "spring-boot-starter-tomcat"
+    }
+    compile("org.springframework.boot:spring-boot-starter-jetty")
+    // end::jetty[]
+    // tag::actuator[]
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+    // end::actuator[]
+    testCompile("junit:junit")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+}
+
+bootRepackage {
+    mainClass = 'hello.MySbApp'
+    executable = true
+
+    embeddedLaunchScriptProperties = [
+            // only works jar is a init.d service
+            // refs https://docs.spring.io/spring-boot/docs/current/reference/html/deployment-install.html
+            logFolder: "/data0/logs",
+    ]
+}
+
+task rename(type: Copy) {
+    from "${jar.destinationDir}"
+    into "${jar.destinationDir}"
+    rename("${jar.archiveName}", "app.jar")
+}
+
+bootRepackage.finalizedBy rename
+
+bootRun {
+    jvmArgs = [
+            "-Dcom.sun.management.jmxremote.port=10053",
+            "-Dcom.sun.management.jmxremote.ssl=false",
+            "-Dcom.sun.management.jmxremote.authenticate=false"
+    ]
+}
+// build docker image by self
+//docker {
+//    name "cargo.caicloudprivatetest.com/caicloud/${jar.baseName}"
+//    files jar.archivePath
+//    buildArgs(['JAR_FILE': "${jar.archiveName}"])
+//}
